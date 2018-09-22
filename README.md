@@ -3,5 +3,15 @@
 
 ```
 npm install
-npm start
+
+GOOGLE_APPLICATION_CREDENTIALS='path/to/key/file' \
+BUCKET='google-cloud-bucket-name' \
+PROJECT='google-cloud-project-name' \
+  npm start
 ```
+
+# TODOs
+
+- [x] upload
+- [ ] download
+- [ ] make it not shit
