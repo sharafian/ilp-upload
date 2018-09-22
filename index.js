@@ -11,13 +11,13 @@ if (!process.env.BUCKET) {
   throw new Error('bucket name must be specified as $BUCKET')
 }
 
-if (!process.env.PROJECT_ID) {
-  throw new Error('bucket name must be specified as $BUCKET')
+if (!process.env.PROJECT) {
+  throw new Error('project name must be specified as $PROJECT')
 }
 
-const Storage = require('@google-cloud/storage')
+const { Storage } = require('@google-cloud/storage')
 const storage = new Storage({
-  projectId: process.env.PROJECT_ID
+  projectId: process.env.PROJECT
 })
 
 const bucket = storage.bucket(process.env.BUCKET)
@@ -56,4 +56,4 @@ app
   .use(router.allowedMethods())
   .listen(port)
 
-console.log('listening. port=', port)
+console.log('listening. port=' + port)
