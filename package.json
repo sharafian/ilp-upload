@@ -1,0 +1,19 @@
+{
+  "name": "ilp-upload",
+  "version": "0.0.1",
+  "description": "File upload site on ILP",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/storage": "^2.0.3",
+    "fast-crc32c": "^1.0.4",
+    "koa": "^2.5.3",
+    "koa-bodyparser": "^4.2.1",
+    "koa-router": "^7.4.0",
+    "web-monetization-receiver": "^1.0.0"
+  }
+}
