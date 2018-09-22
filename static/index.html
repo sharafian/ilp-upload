@@ -1,0 +1,55 @@
+<html>
+  <head>
+    <script src='https://polyfill.webmonetization.org/polyfill.js'></script>
+    <script src='https://cdn.coil.com/donate.js'></script>
+    <script>
+      window.WebMonetizationScripts.donate({
+        paymentPointer: window.location.origin
+      })
+    </script>
+
+  </head>
+  <body>
+    <script>
+      function upload (event) {
+        event.preventDefault()
+        const file = document.getElementById('upload-file').files[0]
+        const uploadName = document.getElementById('upload-name').value
+
+        if (!file) {
+          console.log('no file provided')
+        }
+
+        if (/[^A-Za-z0-9\-_]/.test(uploadName)) {
+          console.log('invalid file name')
+        }
+
+        console.log('uploading file. name=' + uploadName)
+        fetch('/files/' + uploadName, {
+          method: 'POST',
+          body: file
+        }).then(res => {
+          if (res.ok) {
+            console.log('uploaded file. name=' + uploadName)
+          } else {
+            console.error('upload error. name=' + uploadName)
+          }
+        })
+      }
+    </script>
+
+    <h1>ILP Upload</h1>
+    <h2>Upload with Web Monetization</h2>
+    <form onsubmit='javascript:upload(event)'>
+      <input id='upload-name' type='text' /><br />
+      <input id='upload-file' type='file' /><br />
+      <button type='submit'>Upload</button>
+    </form>
+
+    <h2>Download with Web Monetization</h2>
+    <form onsubmit='javascript:download(event)'>
+      <input id='download-name' type='text' /><br />
+      <button type='submit'>Download</button>
+    </form>
+  </body>
+</html>
