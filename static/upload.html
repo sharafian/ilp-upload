@@ -1,0 +1,170 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src='https://polyfill.webmonetization.org/polyfill.js'></script>
+    <script src='https://cdn.coil.com/donate.js'></script>
+    <script>
+      window.WebMonetizationScripts.donate({
+        paymentPointer: window.location.origin
+      })
+      // TODO: only enable button after donate succeeds once
+    </script>
+
+  </head>
+  <body>
+    <script>
+      function upload (event) {
+        event.preventDefault()
+        const file = document.getElementById('upload-file').files[0]
+        const name = document.getElementById('upload-name').value
+
+        if (!file) {
+          console.log('no file provided')
+        }
+
+        if (/[^A-Za-z0-9\-_.]/.test(name)) {
+          console.log('invalid file name')
+        }
+
+        console.log('uploading file. name=' + name)
+        document.getElementById('upload-card').style = 'display:none;'
+        document.getElementById('uploading-card').style = ''
+
+        fetch('/files/' + name, {
+          method: 'POST',
+          body: file
+        }).then(res => {
+          // sometimes the upload is just too fast
+          setTimeout(() => {
+            if (res.ok) {
+              console.log('uploaded file. name=' + name)
+              uploaded(name)
+            } else {
+              console.error('upload error. name=' + name)
+              failed(name)
+            }
+          }, 1000)
+        })
+      }
+
+      function uploaded (name) {
+        document.getElementById('uploading-card').style = 'display:none;'
+        document.getElementById('uploaded-card').style = ''
+        const file =  window.location.origin + '/files/' + name
+        const link =  window.location.origin + '/download.html?name=' +
+          encodeURIComponent(name)
+        const embed =  window.location.origin + '/embed.html?name=' +
+          encodeURIComponent(name)
+        document.getElementById('download-link').innerText = link
+        document.getElementById('download-button').href = file
+        document.getElementById('download-button').download = name
+        document.getElementById('download-embed').innerText = '<iframe src="' +
+          embed + '">\n</iframe>'
+        M.toast({ html: 'uploaded file successfully' })
+      }
+
+      function failed (name) {
+        document.getElementById('uploading-card').style = 'display:none;'
+        document.getElementById('upload-card').style = ''
+        M.toast({ html: 'failed to upload file' })
+      }
+
+      function chooseFile (event) {
+        event.preventDefault()
+        const file = document.getElementById('upload-file')
+        file.click()
+      }
+
+      function changeFile (event) {
+        const file = document.getElementById('upload-file').files[0]
+        if (file) {
+          document.getElementById('upload-button').classList.remove('disabled')
+          const name = document.getElementById('upload-name')
+          name.focus()
+          if (!name.value) {
+            name.value = file.name
+              .replace(/[^A-Za-z0-9\-_.]/g, '')
+          }
+        } else {
+          document.getElementById('upload-button').classList.add('disabled')
+        }
+      }
+    </script>
+
+    <nav>
+      <div class='light-blue nav-wrapper'>
+        <a style='margin-left:0.5em;' href='/' class='brand-logo'>ILP Upload</a>
+        <ul id='nav-mobile' class='right hide-on-med-and-down'>
+          <li><a href='/upload.html'>Upload</a></li>
+          <li><a href='/download.html'>Download</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class='container'>
+      <br />
+      <div class='card' id='upload-card'>
+        <div class='card-content'>
+          <div class='card-title'>Upload Details</div>
+          <form>
+            <input id='upload-file'
+              style='display:none;'
+              type='file'
+              onchange='javascript:changeFile(event)'
+            />
+
+            <div class='input-field'>
+              <input id='upload-name' type='text' />
+              <label for='upload-name'>File Name</label>
+            </div>
+            <a class='light-blue waves-effect waves-light btn'
+              onclick='javascript:chooseFile(event)'
+            >Choose File</a>
+            <a id='upload-button'
+              class='light-blue waves-effect waves-light btn disabled'
+              onclick='javascript:upload(event)'
+            >Upload</a>
+          </form>
+        </div>
+      </div>
+
+      <div class='card' style='display:none;' id='uploading-card'>
+        <div class='card-content'>
+          <div class='card-title'>Uploading...</div>
+
+          <p>Make sure to stay on this page so that you can keep paying for
+          your upload.</p>
+
+          <div class="progress">
+            <div class="indeterminate"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class='' style='display:none;' id='uploaded-card'>
+        <div class='card'>
+          <div class='card-content'>
+            <div class='card-title'>Uploaded</div>
+            <a class='light-blue waves-effect waves-light btn'
+              id='download-button'
+            >Download Now</a>
+          </div>
+        </div>
+        <div class='card'>
+          <div class='card-content'>
+            <div class='card-title'>Share Link</div>
+            <pre class='codeblock' id='download-link'></pre>
+          </div>
+        </div>
+        <div class='card'>
+          <div class='card-content'>
+            <div class='card-title'>Embed in Your Site</div>
+            <pre class='codeblock' id='download-embed'></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -9,7 +9,29 @@
         paymentPointer: window.location.origin
       })
     </script>
+
   </head>
+  <body>
+    <script>
+      function download (event) {
+        event.preventDefault()
+        const name = document.getElementById('download-name').value
+
+        if (/[^A-Za-z0-9\-_.]/.test(name)) {
+          console.log('invalid file name')
+        }
+
+        const downloader = document.createElement('a')
+        downloader.download = name
+        downloader.href = '/files/' + name
+        downloader.style = 'display:none;'
+        document.body.appendChild(downloader)
+
+        console.log('downloading file. name=' + name)
+        downloader.click()
+      }
+    </script>
+
     <nav>
       <div class='light-blue nav-wrapper'>
         <a style='margin-left:0.5em;' href='/' class='brand-logo'>ILP Upload</a>
@@ -20,19 +42,12 @@
       </div>
     </nav>
 
-    <div class='valign-wrapper white-text light-blue accent-4' style='position:relative;top:0px;left:0px;height:80vh;'>
-      <div style='width:100%;text-align:center;'>
-        <h1 class='center-align'>ILP Upload</h1>
-
-        <div class='container'>
-          <h5>Upload and download files for your site, blog, or just to share
-          them. Use Web Monetization to upload your files, and when other users
-          download them with Web Monetization you'll get paid.</h5>
-
-          <br />
-          <a class='light-blue darken-4 waves-effect waves-light btn-large' href='/upload.html'>Upload Now</a>
-        </div>
-
-      </div>
+    <div class='container'>
+      <h2>Download with Web Monetization</h2>
+      <form onsubmit='javascript:download(event)'>
+        <input id='download-name' type='text' /><br />
+        <button type='submit'>Download</button>
+      </form>
     </div>
+  </body>
 </html>

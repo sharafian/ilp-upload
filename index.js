@@ -25,7 +25,7 @@ const storage = new Storage({
 const bucket = storage.bucket(process.env.BUCKET)
 
 router.get('/files/:name', async ctx => {
-  if (/[^A-Za-z0-9\-_]/.test(ctx.params.name)) {
+  if (/[^A-Za-z0-9\-_.]/.test(ctx.params.name)) {
     return ctx.throw(400, 'bad file name')
   }
 
@@ -34,7 +34,7 @@ router.get('/files/:name', async ctx => {
 })
 
 router.post('/files/:name', async ctx => {
-  if (/[^A-Za-z0-9\-_]/.test(ctx.params.name)) {
+  if (/[^A-Za-z0-9\-_.]/.test(ctx.params.name)) {
     return ctx.throw(400, 'bad file name')
   }
   
