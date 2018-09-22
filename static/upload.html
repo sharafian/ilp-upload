@@ -19,6 +19,7 @@
         event.preventDefault()
         const file = document.getElementById('upload-file').files[0]
         const name = document.getElementById('upload-name').value
+        const pointer = document.getElementById('upload-pointer').value
 
         if (!file) {
           console.log('no file provided')
@@ -32,7 +33,10 @@
         document.getElementById('upload-card').style = 'display:none;'
         document.getElementById('uploading-card').style = ''
 
-        fetch('/files/' + name, {
+        const path = '/files/' + name + 
+          (pointer ? ('?paymentPointer=' + encodeURIComponent(pointer)) : '')
+
+        fetch(path, {
           method: 'POST',
           body: file
         }).then(res => {
@@ -115,6 +119,10 @@
               onchange='javascript:changeFile(event)'
             />
 
+            <div class='input-field'>
+              <input id='upload-pointer' type='text' />
+              <label for='upload-pointer'>Payment Pointer</label>
+            </div>
             <div class='input-field'>
               <input id='upload-name' type='text' />
               <label for='upload-name'>File Name</label>

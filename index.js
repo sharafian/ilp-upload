@@ -29,7 +29,10 @@ router.get('/files/:name', async ctx => {
     return ctx.throw(400, 'bad file name')
   }
 
-  const stream = bucket.file(ctx.params.name).createReadStream()
+  const file = bucket.file(ctx.params.name)
+  console.log('got file metadata. metadata=', await file.getMetadata())
+
+  const stream = file.createReadStream()
   ctx.body = ctx.webMonetization.monetizeStream(stream, {})
 })
 
@@ -38,13 +41,27 @@ router.post('/files/:name', async ctx => {
     return ctx.throw(400, 'bad file name')
   }
   
-  const stream = bucket.file(ctx.params.name).createWriteStream()
+  const file = bucket.file(ctx.params.name)
+  const stream = file.createWriteStream()
   ctx.webMonetization.monetizeStream(ctx.req, {}).pipe(stream)
 
+  console.log('awaiting upload')
   await new Promise(resolve => {
-    ctx.req.on('end', resolve)
+    stream.on('finish', resolve)
   })
 
+  console.log('finished upload')
+  if (ctx.query.paymentPointer) {
+    console.log('setting metadata')
+    await file.setMetadata({
+      contentType: 'application/octet-stream',      
+      metadata: {
+        paymentPointer: ctx.query.paymentPointer
+      }
+    })
+  }
+
+  console.log('returning response')
   ctx.body = {
     success: true,
     name: ctx.params.name
