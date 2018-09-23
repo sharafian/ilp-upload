@@ -12,6 +12,8 @@
   "dependencies": {
     "@google-cloud/storage": "^2.0.3",
     "fast-crc32c": "^1.0.4",
+    "ilp-plugin": "^3.2.1",
+    "ilp-protocol-spsp": "^2.1.0",
     "koa": "^2.5.3",
     "koa-bodyparser": "^4.2.1",
     "koa-router": "^7.4.0",

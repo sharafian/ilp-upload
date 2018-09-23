@@ -6,6 +6,8 @@ const serve = require('koa-static')
 const path = require('path')
 const app = new Koa()
 
+const makePlugin = require('ilp-plugin')
+const SPSP = require('ilp-protocol-spsp')
 const { Monetizer } = require('web-monetization-receiver')
 const monetizer = new Monetizer()
 
@@ -30,10 +32,40 @@ router.get('/files/:name', async ctx => {
   }
 
   const file = bucket.file(ctx.params.name)
-  console.log('got file metadata. metadata=', await file.getMetadata())
+  const [ metadata ] = await file.getMetadata()
 
+  const paymentPointer = metadata.metadata.paymentPointer
   const stream = file.createReadStream()
-  ctx.body = ctx.webMonetization.monetizeStream(stream, {})
+  const paidStream = ctx.webMonetization.monetizeStream(stream, {})
+
+  ctx.body = paidStream
+
+  if (paymentPointer) {
+    setImmediate(async () => {
+      let total = 0
+      paidStream.on('money', (amount) => {
+        total += Number(amount)
+      })
+
+      await new Promise(resolve => {
+        paidStream.on('finish', resolve)
+      })
+
+      console.log('paying to uploader.',
+        'receiver=' + paymentPointer,
+        'amount=' + total)
+
+      const plugin = makePlugin()
+      await SPSP.pay(plugin, {
+        receiver: paymentPointer,
+        sourceAmount: total,
+        streamOpts: {
+          minExchangeRatePrecision: 2
+        }
+      })
+      await plugin.disconnect()
+    })
+  }
 })
 
 router.post('/files/:name', async ctx => {
