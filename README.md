@@ -13,5 +13,6 @@ PROJECT='google-cloud-project-name' \
 # TODOs
 
 - [x] upload
-- [ ] download
+- [x] download
 - [ ] make it not shit
+- [ ] google cloud timeout
