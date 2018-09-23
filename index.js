@@ -38,6 +38,10 @@ router.get('/files/:name', async ctx => {
   const stream = file.createReadStream()
   const paidStream = ctx.webMonetization.monetizeStream(stream, {})
 
+  stream.on('error', e => {
+    console.error('stream error', e)
+  })
+
   ctx.body = paidStream
 
   if (paymentPointer) {
@@ -76,6 +80,10 @@ router.post('/files/:name', async ctx => {
   const file = bucket.file(ctx.params.name)
   const stream = file.createWriteStream()
   ctx.webMonetization.monetizeStream(ctx.req, {}).pipe(stream)
+
+  stream.on('error', e => {
+    console.error('stream error', e)
+  })
 
   console.log('awaiting upload')
   await new Promise(resolve => {

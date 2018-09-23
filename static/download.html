@@ -37,10 +37,9 @@
       window.addEventListener('load', function () {
         const params = new URL(window.location).searchParams
         if (params.get('name')) {
+          document.getElementById('file-form').style = 'display:none;'
           document.getElementById('file-name').style = 'margin-bottom:0.5em;'
           document.getElementById('file-name').innerText = params.get('name')
-        } else {
-          document.getElementById('file-form').style = ''
         }
       })
     </script>
@@ -61,7 +60,7 @@
         <div class='card-content'>
           <div class='card-title'>Download File</div>
           <p style='display:none' id='file-name'></p>
-          <form style='display:none' id='file-form'>
+          <form id='file-form'>
             <div class='input-field'>
               <input id='download-name' type='text' />
               <label for='download-name'>File Name</label>

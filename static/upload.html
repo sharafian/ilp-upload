@@ -59,12 +59,12 @@
         const file =  window.location.origin + '/files/' + name
         const link =  window.location.origin + '/download.html?name=' +
           encodeURIComponent(name)
-        const embed =  window.location.origin + '/embed.html?name=' +
+        const embed =  window.location.origin + '/webm.html?name=' +
           encodeURIComponent(name)
         document.getElementById('download-link').innerText = link
         document.getElementById('download-button').href = file
         document.getElementById('download-button').download = name
-        document.getElementById('download-embed').innerText = '<iframe src="' +
+        document.getElementById('download-embed').innerText = '<iframe frameborder="0" src="' +
           embed + '">\n</iframe>'
         M.toast({ html: 'uploaded file successfully' })
       }
@@ -169,6 +169,12 @@
         <div class='card'>
           <div class='card-content'>
             <div class='card-title'>Embed in Your Site</div>
+
+            <p><em>This is an experimental feature.</em> If you upload a webm
+            video then you can embed it in your site and get paid when your users download
+            it. Other formats will be supported soon, including other video formats or
+            images.</p>
+
             <pre class='codeblock' id='download-embed'></pre>
           </div>
         </div>
