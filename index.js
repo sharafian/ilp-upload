@@ -34,7 +34,7 @@ router.get('/files/:name', async ctx => {
   const file = bucket.file(ctx.params.name)
   const [ metadata ] = await file.getMetadata()
 
-  const paymentPointer = metadata.metadata.paymentPointer
+  const paymentPointer = metadata.metadata && metadata.metadata.paymentPointer
   const stream = file.createReadStream()
   const paidStream = ctx.webMonetization.monetizeStream(stream, {})
 
