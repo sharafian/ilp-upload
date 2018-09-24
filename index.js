@@ -1,4 +1,5 @@
 const Koa = require('koa')
+const crypto = require('crypto')
 const port = process.env.PORT || 8088
 const router = require('koa-router')()
 const parser = require('koa-bodyparser')()
@@ -10,7 +11,11 @@ const makePlugin = require('ilp-plugin')
 const SPSP = require('ilp-protocol-spsp')
 const { Monetizer, Payer } = require('web-monetization-receiver')
 const monetizer = new Monetizer()
-const payer = new Payer()
+const payer = new Payer({
+  streamOpts: {
+    minExchangeRatePrecision: 2
+  }
+})
 
 if (!process.env.BUCKET) {
   throw new Error('bucket name must be specified as $BUCKET')
@@ -93,19 +98,23 @@ const base64url = buf => buf.toString('base64')
   .replace(/=/g, '')
 
 const spspReceiver = async (ctx, next) => {
-  if (!ctx.cookies.get('webMonetization')) {
-    ctx.cookies.set('webMonetization', base64url(crypto.randomBytes(16)))
+  let cookie = ctx.cookies.get('webMonetization')
+  if (!cookie) {
+    cookie = base64url(crypto.randomBytes(16))
+    ctx.cookies.set('webMonetization', cookie)
   }
 
-  const tag = ctx.cookies.get('webMonetization') +
+  const tag = cookie +
     base64url(Buffer.from(ctx.query.pointer || ''))
   ctx.webMonetization = monetizer.getBucket(tag)
   ctx.paymentPointer = ctx.query.pointer
 
+  console.log('request', ctx.url, tag)
   if (ctx.get('accept').includes('application/spsp4+json')) {
     ctx.body = await monetizer.generateSPSPResponse(tag)
     ctx.set('Content-Type', 'application/spsp4+json')
     ctx.set('Access-Control-Allow-Origin', '*')
+    ctx.set('Access-Control-Allow-Headers', '*')
     return
   }
 
@@ -115,14 +124,18 @@ const spspReceiver = async (ctx, next) => {
 async function run () {
   await monetizer.listen()
   monetizer.server.on('connection', conn => {
+    console.log('got connection')
     const pointer = Buffer.from(
       // get payment pointer after random ID
-      connection.connectionTag.substring(22), 'base64')
+      conn.connectionTag.substring(22), 'base64')
       .toString()
 
+    console.log('got pointer', pointer)
     conn.on('stream', stream => {
+      console.log('got stream')
       stream.on('money', async amount => {
         try {
+          console.log('paying to pointer', pointer, amount)
           await payer.pay(pointer, amount)
           console.log('paid out. pointer=' + pointer, 'amount=' + amount)
         } catch (e) {

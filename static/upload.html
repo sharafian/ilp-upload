@@ -64,7 +64,7 @@
         document.getElementById('download-button').href = file
         document.getElementById('download-button').download = name
         document.getElementById('download-embed').innerText = '<img src="' +
-          link + '" />'
+          file + '" />'
         document.getElementById('download-monetize').innerText = '<script src=\'https://polyfill.webmonetization.org/polyfill.js\' ><\/script>\n<script src=\'https://cdn.coil.com/donate.js\' ><\/script>\n<script>\n  window.WebMonetizationScripts.donate({\n    paymentPointer: \'' + window.location.origin + '/?pointer=' + encodeURIComponent(pointer) + '\'\n  })\n<\/script>'
         M.toast({ html: 'uploaded file successfully' })
       }
