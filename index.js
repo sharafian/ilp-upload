@@ -8,8 +8,9 @@ const app = new Koa()
 
 const makePlugin = require('ilp-plugin')
 const SPSP = require('ilp-protocol-spsp')
-const { Monetizer } = require('web-monetization-receiver')
+const { Monetizer, Payer } = require('web-monetization-receiver')
 const monetizer = new Monetizer()
+const payer = new Payer()
 
 if (!process.env.BUCKET) {
   throw new Error('bucket name must be specified as $BUCKET')
@@ -43,40 +44,18 @@ router.get('/files/:name', async ctx => {
   })
 
   ctx.body = paidStream
-
-  if (paymentPointer) {
-    setImmediate(async () => {
-      let total = 0
-      paidStream.on('money', (amount) => {
-        total += Number(amount)
-      })
-
-      await new Promise(resolve => {
-        paidStream.on('finish', resolve)
-      })
-
-      console.log('paying to uploader.',
-        'receiver=' + paymentPointer,
-        'amount=' + total)
-
-      const plugin = makePlugin()
-      await SPSP.pay(plugin, {
-        receiver: paymentPointer,
-        sourceAmount: total,
-        streamOpts: {
-          minExchangeRatePrecision: 2
-        }
-      })
-      await plugin.disconnect()
-    })
-  }
+  ctx.set('Access-Control-Allow-Origin', '*')
 })
 
 router.post('/files/:name', async ctx => {
   if (/[^A-Za-z0-9\-_.]/.test(ctx.params.name)) {
     return ctx.throw(400, 'bad file name')
   }
-  
+
+  if (ctx.paymentPointer) {
+    return ctx.throw(400, 'cannot upload if you\'re also monetizing to yourself')
+  }
+
   const file = bucket.file(ctx.params.name)
   const stream = file.createWriteStream()
   ctx.webMonetization.monetizeStream(ctx.req, {}).pipe(stream)
@@ -108,12 +87,66 @@ router.post('/files/:name', async ctx => {
   }
 })
 
-app
-  .use(monetizer.koa())
-  .use(parser)
-  .use(router.routes())
-  .use(router.allowedMethods())
-  .use(serve(path.resolve(__dirname, 'static')))
-  .listen(port)
+const base64url = buf => buf.toString('base64')
+  .replace(/\+/g, '-')
+  .replace(/\//g, '_')
+  .replace(/=/g, '')
 
-console.log('listening. port=' + port)
+const spspReceiver = async (ctx, next) => {
+  if (!ctx.cookies.get('webMonetization')) {
+    ctx.cookies.set('webMonetization', base64url(crypto.randomBytes(16)))
+  }
+
+  const tag = ctx.cookies.get('webMonetization') +
+    base64url(Buffer.from(ctx.query.pointer || ''))
+  ctx.webMonetization = monetizer.getBucket(tag)
+  ctx.paymentPointer = ctx.query.pointer
+
+  if (ctx.get('accept').includes('application/spsp4+json')) {
+    ctx.body = await monetizer.generateSPSPResponse(tag)
+    ctx.set('Content-Type', 'application/spsp4+json')
+    ctx.set('Access-Control-Allow-Origin', '*')
+    return
+  }
+
+  return next()
+}
+
+async function run () {
+  await monetizer.listen()
+  monetizer.server.on('connection', conn => {
+    const pointer = Buffer.from(
+      // get payment pointer after random ID
+      connection.connectionTag.substring(22), 'base64')
+      .toString()
+
+    conn.on('stream', stream => {
+      stream.on('money', async amount => {
+        try {
+          await payer.pay(pointer, amount)
+          console.log('paid out. pointer=' + pointer, 'amount=' + amount)
+        } catch (e) {
+          console.error('could not pay.' +
+            ' pointer=' + pointer +
+            ' error=' + e.stack)
+        }
+      })
+    })
+  })
+
+  app
+    .use(spspReceiver)
+    .use(parser)
+    .use(router.routes())
+    .use(router.allowedMethods())
+    .use(serve(path.resolve(__dirname, 'static')))
+    .listen(port)
+
+  console.log('listening. port=' + port)
+}
+
+run()
+  .catch(e => {
+    console.error(e)
+    process.exit(1)
+  })

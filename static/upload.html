@@ -54,18 +54,18 @@
       }
 
       function uploaded (name) {
+        const pointer = document.getElementById('upload-pointer').value
         document.getElementById('uploading-card').style = 'display:none;'
         document.getElementById('uploaded-card').style = ''
         const file =  window.location.origin + '/files/' + name
         const link =  window.location.origin + '/download.html?name=' +
           encodeURIComponent(name)
-        const embed =  window.location.origin + '/webm.html?name=' +
-          encodeURIComponent(name)
         document.getElementById('download-link').innerText = link
         document.getElementById('download-button').href = file
         document.getElementById('download-button').download = name
-        document.getElementById('download-embed').innerText = '<iframe frameborder="0" src="' +
-          embed + '">\n</iframe>'
+        document.getElementById('download-embed').innerText = '<img src="' +
+          link + '" />'
+        document.getElementById('download-monetize').innerText = '<script src=\'https://polyfill.webmonetization.org/polyfill.js\' ><\/script>\n<script src=\'https://cdn.coil.com/donate.js\' ><\/script>\n<script>\n  window.WebMonetizationScripts.donate({\n    paymentPointer: \'' + window.location.origin + '/?pointer=' + encodeURIComponent(pointer) + '\'\n  })\n<\/script>'
         M.toast({ html: 'uploaded file successfully' })
       }
 
@@ -170,11 +170,14 @@
           <div class='card-content'>
             <div class='card-title'>Embed in Your Site</div>
 
-            <p><em>This is an experimental feature.</em> If you upload a webm
-            video then you can embed it in your site and get paid when your users download
-            it. Other formats will be supported soon, including other video formats or
-            images.</p>
+            <p><em>This is an experimental feature.</em> If you add the
+following block of code to your site, then the money you receive will first go
+through this service. This allows you to embed resources that can only be
+downloaded by your users with Web Monetization. All of the payment will
+still go to your payment pointer.</p>
 
+            <pre class='codeblock' id='download-monetize'></pre>
+            <br />
             <pre class='codeblock' id='download-embed'></pre>
           </div>
         </div>
